@@ -115,7 +115,7 @@ void clk_SWI_GTZ_0697Hz(UArg arg0)
    	}
 
    	Goertzel_Value = (((short) R_in) * ((short)Goertzel_Value)) >> 15;
-//   	mcbsp0_write(Goertzel_Value& 0xfffffffe);// Send the signal out
+//   	mcbsp0_write(Goertzel_Value& 0xfffffffe);// Send the signal out 
 
     gtz_out[0] = Goertzel_Value;
     return;
