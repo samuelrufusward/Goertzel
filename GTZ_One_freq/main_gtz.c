@@ -69,7 +69,7 @@ void clk_SWI_Generate_DTMF(UArg arg0)
 	tick = Clock_getTicks();
 
 //	sample = (int) 32768.0*sin(2.0*PI*freq1*TICK_PERIOD*tick) + 32768.0*sin(2.0*PI*freq2*TICK_PERIOD*tick);
-	sample = (int) 32768.0*sin(2.0*PI*freq1*TICK_PERIOD*tick) + 32768.0*sin(2.0*PI*0*TICK_PERIOD*tick);  // WHY WHY why do we use this 32768 as magnitude - as 2^15 value to give a precise 1 second period ( 1Hz) using 15 stage binary counter
+	sample = (int) 32768.0*sin(2.0*PI*freq1*TICK_PERIOD*tick) + 32768.0*sin(2.0*PI*0*TICK_PERIOD*tick);
 	sample = sample >>12;
 }
 
@@ -87,37 +87,15 @@ void clk_SWI_GTZ_0697Hz(UArg arg0)
    	static short delay_1 = 0;
    	static short delay_2 = 0;
 
-   	int prod1, prod2, prod3, R_in;
+   	int prod1, prod2, prod3;
 
    	short input, coef_1;
-   	coef_1 = 0x4A70;
 
-   	R_in = mcbsp0_read();// Read the signal in
 
-   	input = (short) R_in;
-   	input = input >> 4;   // Scale down input to prevent overflow
-   	prod1 = (delay_1*coef_1)>>14;
-   	delay = input + (short)prod1 -delay_2;
-   	delay_2 = delay_1;
-   	delay_1 = delay;
-   	N++;
+// to be completed
 
-   	if (N==206)
-   	{
-   		prod1 = (delay_1 * delay_1);
-   		prod2 = (delay_2 * delay_2);
-   		prod3 = (delay_1 *  coef_1)>>14;
-   		prod3 = prod3 * delay_2;
-   		Goertzel_Value = (prod1 + prod2 -prod3) >> 15;
-   		Goertzel_Value <<= 4;   // Scale up value for sensitivity
-   		N = 0;
-   		delay_1 = delay_2 = 0;
-   	}
 
-   	Goertzel_Value = (((short) R_in) * ((short)Goertzel_Value)) >> 15;
-   	mcbsp0_write(Goertzel_Value& 0xfffffffe);// Send the signal ou
+    	gtz_out[0] = Goertzel_Value;
 
-    gtz_out[0] = Goertzel_Value;
-    return;
 
 }
