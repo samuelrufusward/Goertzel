@@ -1,0 +1,80 @@
+/* Include Files */
+#include "hope.h"
+#include <math.h>
+
+/* Function Definitions */
+/*
+ * Arguments    : const double data[2000]
+ *                const double freq_indices[10]
+ *                creal_T dft_data[10]
+ * Return Type  : void
+ */
+void hope(const double data[2000], const double freq_indices[10], creal_T
+          dft_data[10])
+{
+  double complexConstant_im;
+  double complexConstant_re;
+  double cos2TwidFactor;
+  double phaseCorrection_im;
+  double phaseCorrection_re;
+  double s0_im;
+  double s0_re;
+  double s1_im;
+  double s1_re;
+  double s2_im;
+  double s2_re;
+  int freqIndex;
+  int ind;
+  for (freqIndex = 0; freqIndex < 10; freqIndex++) {
+    s2_re = 6.2831853071795862 * (freq_indices[freqIndex] - 1.0) / 2000.0;
+    cos2TwidFactor = 2.0 * cos(s2_re);
+    phaseCorrection_re = s2_re * 0.0;
+    if (-s2_re == 0.0) {
+      complexConstant_re = exp(phaseCorrection_re);
+      complexConstant_im = 0.0;
+    } else {
+      s0_re = exp(phaseCorrection_re / 2.0);
+      complexConstant_re = s0_re * (s0_re * cos(-s2_re));
+      complexConstant_im = s0_re * (s0_re * sin(-s2_re));
+    }
+
+    phaseCorrection_re *= 1999.0;
+    phaseCorrection_im = 1999.0 * -s2_re;
+    if (phaseCorrection_im == 0.0) {
+      phaseCorrection_re = exp(phaseCorrection_re);
+      phaseCorrection_im = 0.0;
+    } else {
+      s0_re = exp(phaseCorrection_re / 2.0);
+      phaseCorrection_re = s0_re * (s0_re * cos(phaseCorrection_im));
+      phaseCorrection_im = s0_re * (s0_re * sin(phaseCorrection_im));
+    }
+
+    s1_re = 0.0;
+    s1_im = 0.0;
+    s2_re = 0.0;
+    s2_im = 0.0;
+    for (ind = 0; ind < 1999; ind++) {
+      s0_re = (data[ind] + cos2TwidFactor * s1_re) - s2_re;
+      s0_im = cos2TwidFactor * s1_im - s2_im;
+      s2_re = s1_re;
+      s2_im = s1_im;
+      s1_re = s0_re;
+      s1_im = s0_im;
+    }
+
+    s0_re = ((data[1999] + cos2TwidFactor * s1_re) - s2_re) - (s1_re *
+      complexConstant_re - s1_im * complexConstant_im);
+    s2_re = (cos2TwidFactor * s1_im - s2_im) - (s1_re * complexConstant_im +
+      s1_im * complexConstant_re);
+    dft_data[freqIndex].re = s0_re * phaseCorrection_re - s2_re *
+      phaseCorrection_im;
+    dft_data[freqIndex].im = s0_re * phaseCorrection_im + s2_re *
+      phaseCorrection_re;
+  }
+}
+
+/*
+ * File trailer for hope.c
+ *
+ * [EOF]
+ */
