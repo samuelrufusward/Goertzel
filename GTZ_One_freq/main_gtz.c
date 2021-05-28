@@ -1,7 +1,3 @@
-/*
- *  ======== gtz.c ========
- */    
-
 #include <xdc/std.h>
 #include <xdc/runtime/System.h>
 
@@ -50,7 +46,7 @@ void main(void)
     /* Instantiate 8 parallel ISRs for each of the eight Goertzel coefficients */
 	Clock_create(clk_SWI_GTZ_0697Hz, TIMEOUT, &clkParams, NULL);
 
-	mag1 = 32768.0; mag2 = 32768.0; freq1 = 697; // I am setting freq1 = 697Hz to test my GTZ algorithm with one frequency.
+	mag1 = 32768.0; mag2 = 32768.0; freq1 = 770; // I am setting freq1 = 697Hz to test my GTZ algorithm with one frequency.
 
 	/* Start SYS_BIOS */
     BIOS_start();
@@ -69,7 +65,8 @@ void clk_SWI_Generate_DTMF(UArg arg0)
 	tick = Clock_getTicks();
 
 //	sample = (int) 32768.0*sin(2.0*PI*freq1*TICK_PERIOD*tick) + 32768.0*sin(2.0*PI*freq2*TICK_PERIOD*tick);
-	sample = (int) 32768.0*sin(2.0*PI*freq1*TICK_PERIOD*tick) + 32768.0*sin(2.0*PI*0*TICK_PERIOD*tick);  // Why do we use this 32768 as magnitude - as 2^15 value to give a precise 1 second period ( 1Hz) using 15 stage binary counter
+	sample = (int) (32768.0*sin(2.0*PI*freq1*TICK_PERIOD*tick));  // Why do we use this 32768 as magnitude - as 2^15 value to give a precise 1 second period ( 1Hz) using 15 stage binary counter
+
 	sample = sample >>12;
 }
 
@@ -86,17 +83,17 @@ void clk_SWI_GTZ_0697Hz(UArg arg0)
    	static short delay;
    	static short delay_1 = 0;
    	static short delay_2 = 0;
-
-   	int prod1, prod2, prod3, R_in;
-
+   	int prod1, prod2, prod3, R_in, output;
    	short input, coef_1;
-   	coef_1 = 0x6D02;
 
+   	coef_1 = 0x6D02;
+   	//coef_1 = 0x68B1;
    	R_in = sample;// Read the signal in
 
    	input = (short) R_in;
-   	input = input >> 4;   // Scale down input to prevent overflow
-   	prod1 = (delay_1*coef_1)>>14;
+
+   	prod1 = (delay_1*coef_1);
+   	prod1 = prod1>>14;
    	delay = input + (short)prod1 -delay_2;
    	delay_2 = delay_1;
    	delay_1 = delay;
@@ -106,19 +103,19 @@ void clk_SWI_GTZ_0697Hz(UArg arg0)
    	{
    		prod1 = (delay_1 * delay_1);
    		prod2 = (delay_2 * delay_2);
-   		prod3 = (delay_1 *  coef_1)>>14;
-   		prod3 = prod3 * delay_2;
-   		Goertzel_Value = (prod1 + prod2 - prod3) >> 15;
-   		Goertzel_Value <<= 4;   // Scale up value for sensitivity
+   		prod3 = (delay_1 *  coef_1)>>6;
+   		prod3 = (prod3 * delay_2)>>8;
+   		Goertzel_Value = (prod1 + prod2 - prod3) >> 7;
+   		System_printf("\n GV before shift %d :\n", Goertzel_Value);
    		N = 0;
    		delay_1 = delay_2 = 0;
    	}
 
+   	output = Goertzel_Value;
 
-   	Goertzel_Value = (((short) R_in) * ((short)Goertzel_Value)) >> 15;
-//   	mcbsp0_write(Goertzel_Value& 0xfffffffe);// Send the signal out
+    gtz_out[0] = output;
 
-    gtz_out[0] = Goertzel_Value;
     return;
 
 }
+
