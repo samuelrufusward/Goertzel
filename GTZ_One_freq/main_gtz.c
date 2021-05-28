@@ -91,7 +91,6 @@ void clk_SWI_GTZ_0697Hz(UArg arg0)
 
    	short input, coef_1;
    	coef_1 = 0x6D02;
-   	coef_1 = coef_1 * 2;
 
    	R_in = sample;// Read the signal in
 
